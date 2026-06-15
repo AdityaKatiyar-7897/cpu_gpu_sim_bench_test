@@ -1,14 +1,17 @@
 // FPS START DROPPING AFTER AROUND 700
 
 #include <SDL.h>
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 
 
 #define WIDTH 1200
 #define HEIGHT 800
 
 #define BALL_COUNT 4000
+#define TARGET_FPS 60
 
 // Creating the ball
 typedef struct
@@ -133,26 +136,47 @@ void draw_ball(SDL_Renderer *renderer, SDL_Texture *ball_texture, Ball *ball)
 
 // Ball - ball collision check
 
-void ball_collision(Ball *a, Ball *b)
+void ball_collision(Ball *input, Ball *output, int id, int count)
 {
-	float dx = b->x - a->x;
-	float dy = b->y - a->y;
+    Ball a = input[id];
 
-	float distance_squared = dx * dx + dy * dy;
+    for (int j = 0; j < count; j++)
+    {
+        if (j == id)
+        {
+            continue;
+        }
 
-	float min_distance = a->radius + b->radius;
+        Ball b = input[j];
 
-	if (distance_squared < min_distance * min_distance)
-	{
-		float temp_vx = a->vx; // velocities interchanging to give illusion of momentum
-		float temp_vy = a->vy;
+        float dx = a.x - b.x;
+        float dy = a.y - b.y;
+        float min_distance = a.radius + b.radius;
+        float distance_squared = dx * dx + dy * dy;
 
-		a->vx = b->vx;
-		a->vy = b->vy;
+        if (distance_squared > 0.0001f && distance_squared < min_distance * min_distance)
+        {
+            float distance = sqrtf(distance_squared);
+            float nx = dx / distance;
+            float ny = dy / distance;
 
-		b->vx = temp_vx;
-		b->vy = temp_vy;
-	}
+            float relative_vx = a.vx - b.vx;
+            float relative_vy = a.vy - b.vy;
+            float velocity_along_normal = relative_vx * nx + relative_vy * ny;
+
+            if (velocity_along_normal < 0.0f)
+            {
+                a.vx -= velocity_along_normal * nx * 0.8f;
+                a.vy -= velocity_along_normal * ny * 0.8f;
+            }
+
+            float overlap = min_distance - distance;
+            a.x += nx * overlap * 0.25f;
+            a.y += ny * overlap * 0.25f;
+        }
+    }
+
+    output[id] = a;
 }
 
 
@@ -185,6 +209,7 @@ int main(void)
     // Introducing more balls 
     
     Ball balls[BALL_COUNT];
+    Ball collision_input[BALL_COUNT];
 
     //Spawning many balls
 
@@ -209,8 +234,17 @@ int main(void)
     int frames = 0;
     float fps = 0.0f;
 
+    const double counter_frequency =
+        (double)SDL_GetPerformanceFrequency();
+
+    const double target_frame_seconds =
+        1.0 / TARGET_FPS;
+
         while (running)
     {
+        Uint64 frame_start =
+            SDL_GetPerformanceCounter();
+
        
         SDL_Event event;
 
@@ -259,17 +293,17 @@ int main(void)
         	ball_step(&balls[i], dt);
         }
 
-        //Every ball checking every other ball
+        memcpy(collision_input, balls, sizeof(balls));
 
-       for (int i = 0; i < BALL_COUNT; i++)
+        // Every ball checks every other ball using the same pre-collision snapshot.
+        for (int i = 0; i < BALL_COUNT; i++)
         {
-        	for (int j = i + 1 ; j < BALL_COUNT; j++)
-        	{
-        		ball_collision(
-        			&balls[i],
-        			&balls[j]
-        		);
-        	}
+            ball_collision(
+                collision_input,
+                balls,
+                i,
+                BALL_COUNT
+            );
         }
               
         SDL_SetRenderDrawColor(
@@ -296,6 +330,20 @@ int main(void)
         }
 
         SDL_RenderPresent(renderer);
+
+        while ((SDL_GetPerformanceCounter() - frame_start) / counter_frequency < target_frame_seconds)
+        {
+            double elapsed =
+                (SDL_GetPerformanceCounter() - frame_start) / counter_frequency;
+
+            double remaining =
+                target_frame_seconds - elapsed;
+
+            if (remaining > 0.002)
+                SDL_Delay((Uint32)(remaining * 1000.0) - 1);
+            else
+                SDL_Delay(0);
+        }
     }
     
     SDL_DestroyTexture(ball_texture);
