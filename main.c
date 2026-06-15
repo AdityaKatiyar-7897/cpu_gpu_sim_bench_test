@@ -4,7 +4,7 @@
 #define WIDTH 1200
 #define HEIGHT 800
 
-#define BALL_COUNT 100
+#define BALL_COUNT 2000
 
 // Creating the ball
 typedef struct
@@ -194,7 +194,7 @@ int main(void)
 
         //Every ball checking every other ball
 
-        for (int i = 0; i < BALL_COUNT; i++)
+       /* for (int i = 0; i < BALL_COUNT; i++)
         {
         	for (int j = i + 1 ; j < BALL_COUNT; j++)
         	{
@@ -203,7 +203,7 @@ int main(void)
         			&balls[j]
         		);
         	}
-        }
+        }*/
               
         SDL_SetRenderDrawColor(
             renderer,
