@@ -1,10 +1,12 @@
 #include <SDL.h>
 #include <stdbool.h>
+#include <stdio.h>
+
 
 #define WIDTH 1200
 #define HEIGHT 800
 
-#define BALL_COUNT 50000
+#define BALL_COUNT 2000
 
 // Creating the ball
 typedef struct
@@ -185,6 +187,18 @@ int main(void)
             (float)(current - previous)
             / SDL_GetPerformanceFrequency();
 
+        char title[128];
+
+        snprintf(
+        	title,
+        	sizeof(title),
+        	"Balls: %d | FPS: %.0f",
+        	BALL_COUNT,
+        	1.0F / dt
+        );
+
+        SDL_SetWindowTitle(window, title);
+
         previous = current;
       
         for (int i= 0; i < BALL_COUNT; i++)
@@ -194,7 +208,7 @@ int main(void)
 
         //Every ball checking every other ball
 
-       /* for (int i = 0; i < BALL_COUNT; i++)
+       for (int i = 0; i < BALL_COUNT; i++)
         {
         	for (int j = i + 1 ; j < BALL_COUNT; j++)
         	{
@@ -203,7 +217,7 @@ int main(void)
         			&balls[j]
         		);
         	}
-        }*/
+        }
               
         SDL_SetRenderDrawColor(
             renderer,
@@ -223,19 +237,8 @@ int main(void)
 
         for (int i = 0; i < BALL_COUNT; i++)
         {
-           // draw_ball(renderer, &balls[i]);
+            draw_ball(renderer, &balls[i]);
 
-           SDL_Rect rect =
-           {
-               (int)balls[i].x,
-               (int)balls[i].y,
-               4,
-               4
-           };
-           
-           SDL_RenderFillRect(
-               renderer,
-               &rect);
            
         }
 
