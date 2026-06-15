@@ -93,6 +93,30 @@ void draw_ball(SDL_Renderer *renderer, Ball *ball)
     }
 }
 
+// Ball - ball collision check
+
+void ball_collision(Ball *a, Ball *b)
+{
+	float dx = b->x - a->x;
+	float dy = b->y - a->y;
+
+	float distance_squared = dx * dx + dy * dy;
+
+	float min_distance = a->radius + b->radius;
+
+	if (distance_squared < min_distance * min_distance)
+	{
+		float temp_vx = a->vx; // velocities interchanging to give illusion of momentum
+		float temp_vy = a->vy;
+
+		a->vx = b->vx;
+		a->vy = b->vy;
+
+		b->vx = temp_vx;
+		b->vy = temp_vy;
+	}
+}
+
 
 int main(void)
 {
@@ -166,6 +190,19 @@ int main(void)
         for (int i= 0; i < BALL_COUNT; i++)
         {
         	ball_step(&balls[i], dt);
+        }
+
+        //Every ball checking every other ball
+
+        for (int i = 0; i < BALL_COUNT; i++)
+        {
+        	for (int j = i + 1 ; j < BALL_COUNT; j++)
+        	{
+        		ball_collision(
+        			&balls[i],
+        			&balls[j]
+        		);
+        	}
         }
               
         SDL_SetRenderDrawColor(
