@@ -4,7 +4,7 @@
 #define WIDTH 1200
 #define HEIGHT 800
 
-#define BALL_COUNT 2000
+#define BALL_COUNT 50000
 
 // Creating the ball
 typedef struct
@@ -151,7 +151,7 @@ int main(void)
     {
     	balls[i].x = 50 + rand() % (WIDTH - 100);
 
-    	balls[i].y = -rand() % 2000;
+    	balls[i].y = -(rand() % 2000);
 
     	balls[i].vx = (rand() % 200) - 100; //to make them move left right while falling 
     	balls[i].vy = 0.0f;
@@ -214,9 +214,29 @@ int main(void)
 
         SDL_RenderClear(renderer);
 
+        SDL_SetRenderDrawColor(
+            renderer,
+            255,
+            255,
+            255,
+            255);
+
         for (int i = 0; i < BALL_COUNT; i++)
         {
-            draw_ball(renderer, &balls[i]);
+           // draw_ball(renderer, &balls[i]);
+
+           SDL_Rect rect =
+           {
+               (int)balls[i].x,
+               (int)balls[i].y,
+               4,
+               4
+           };
+           
+           SDL_RenderFillRect(
+               renderer,
+               &rect);
+           
         }
 
         SDL_RenderPresent(renderer);
