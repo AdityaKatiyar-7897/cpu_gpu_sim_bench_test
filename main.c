@@ -4,6 +4,8 @@
 #define WIDTH 1200
 #define HEIGHT 800
 
+#define BALL_COUNT 100
+
 // Creating the ball
 typedef struct
 {
@@ -100,20 +102,27 @@ int main(void)
             -1,
             SDL_RENDERER_ACCELERATED);
 
+    
 
-    // Creating one ball
-    Ball ball =
+
+    // Introducing more balls 
+    
+    Ball balls[BALL_COUNT];
+
+    //Spawning many balls
+
+    for (int i = 0; i < BALL_COUNT; i++)
     {
-        .x = WIDTH / 2.0f,
-        .y = 100.0f,
+    	balls[i].x = 50 + rand() % (WIDTH - 100);
 
-        .vx = 0.0f,
-        .vy = 0.0f,
+    	balls[i].y = -rand() % 2000;
 
-        .radius = 20.0f
-    };
+    	balls[i].vx = 0.0f;
+    	balls[i].vy = 0.0f;
 
-
+    	balls[i].radius = 8.0f;
+    }
+        
     bool running = true;
 
     Uint64 previous =
@@ -142,7 +151,10 @@ int main(void)
 
         previous = current;
       
-        ball_step(&ball, dt);
+        for (int i= 0; i < BALL_COUNT; i++)
+        {
+        	ball_step(&balls[i], dt);
+        }
               
         SDL_SetRenderDrawColor(
             renderer,
@@ -153,7 +165,10 @@ int main(void)
 
         SDL_RenderClear(renderer);
 
-        draw_ball(renderer, &ball);
+        for (int i = 0; i < BALL_COUNT; i++)
+        {
+            draw_ball(renderer, &balls[i]);
+        }
 
         SDL_RenderPresent(renderer);
     }
