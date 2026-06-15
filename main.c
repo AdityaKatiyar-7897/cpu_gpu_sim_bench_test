@@ -1,3 +1,5 @@
+// FPS START DROPPING AFTER AROUND 700
+
 #include <SDL.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -6,7 +8,7 @@
 #define WIDTH 1200
 #define HEIGHT 800
 
-#define BALL_COUNT 2000
+#define BALL_COUNT 700
 
 // Creating the ball
 typedef struct
