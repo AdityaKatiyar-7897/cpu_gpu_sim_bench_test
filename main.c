@@ -8,7 +8,7 @@
 #define WIDTH 1200
 #define HEIGHT 800
 
-#define BALL_COUNT 700
+#define BALL_COUNT 4000
 
 // Creating the ball
 typedef struct
@@ -71,30 +71,64 @@ void ball_step(Ball *ball, float dt)
 //Drawing the ball i.r rendering logic
 
 
-void draw_ball(SDL_Renderer *renderer, Ball *ball)
+SDL_Texture *create_ball_texture(SDL_Renderer *renderer, int radius)
 {
-    SDL_SetRenderDrawColor(
-        renderer,
-        255,
-        255,
-        255,
-        255);
+    int size = radius * 2;
 
-    int r = (int)ball->radius;
+    SDL_Surface *surface =
+        SDL_CreateRGBSurfaceWithFormat(
+            0,
+            size,
+            size,
+            32,
+            SDL_PIXELFORMAT_RGBA32);
 
-    for (int y = -r; y <= r; y++)
+    Uint32 transparent =
+        SDL_MapRGBA(surface->format, 0, 0, 0, 0);
+
+    Uint32 white =
+        SDL_MapRGBA(surface->format, 255, 255, 255, 255);
+
+    SDL_FillRect(surface, NULL, transparent);
+
+    Uint32 *pixels = (Uint32 *)surface->pixels;
+
+    for (int y = 0; y < size; y++)
     {
-        for (int x = -r; x <= r; x++)
+        for (int x = 0; x < size; x++)
         {
-            if (x*x + y*y <= r*r)
+            int dx = x - radius;
+            int dy = y - radius;
+
+            if (dx * dx + dy * dy <= radius * radius)
             {
-                SDL_RenderDrawPoint(
-                    renderer,
-                    (int)ball->x + x,
-                    (int)ball->y + y);
+                pixels[y * size + x] = white;
             }
         }
     }
+
+    SDL_Texture *texture =
+        SDL_CreateTextureFromSurface(renderer, surface);
+
+    SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+
+    SDL_FreeSurface(surface);
+
+    return texture;
+}
+
+void draw_ball(SDL_Renderer *renderer, SDL_Texture *ball_texture, Ball *ball)
+{
+    int r = (int)ball->radius;
+
+    SDL_Rect rect = {
+        (int)ball->x - r,
+        (int)ball->y - r,
+        r * 2,
+        r * 2
+    };
+
+    SDL_RenderCopy(renderer, ball_texture, NULL, &rect);
 }
 
 // Ball - ball collision check
@@ -142,6 +176,9 @@ int main(void)
             -1,
             SDL_RENDERER_ACCELERATED);
 
+    SDL_Texture *ball_texture =
+        create_ball_texture(renderer, 8);
+
     
 
 
@@ -168,6 +205,9 @@ int main(void)
     Uint64 previous =
         SDL_GetPerformanceCounter();
 
+    float fps_timer = 0.0f;
+    int frames = 0;
+    float fps = 0.0f;
 
         while (running)
     {
@@ -189,19 +229,30 @@ int main(void)
             (float)(current - previous)
             / SDL_GetPerformanceFrequency();
 
-        char title[128];
-
-        snprintf(
-        	title,
-        	sizeof(title),
-        	"Balls: %d | FPS: %.0f",
-        	BALL_COUNT,
-        	1.0F / dt
-        );
-
-        SDL_SetWindowTitle(window, title);
-
         previous = current;
+
+        fps_timer += dt;
+        frames++;
+
+        if (fps_timer >= 0.5f)
+        {
+            fps = frames / fps_timer;
+
+            char title[128];
+
+            snprintf(
+                title,
+                sizeof(title),
+                "Balls: %d | FPS: %.1f",
+                BALL_COUNT,
+                fps
+            );
+
+            SDL_SetWindowTitle(window, title);
+
+            fps_timer = 0.0f;
+            frames = 0;
+        }
       
         for (int i= 0; i < BALL_COUNT; i++)
         {
@@ -239,7 +290,7 @@ int main(void)
 
         for (int i = 0; i < BALL_COUNT; i++)
         {
-            draw_ball(renderer, &balls[i]);
+            draw_ball(renderer, ball_texture, &balls[i]);
 
            
         }
@@ -247,6 +298,7 @@ int main(void)
         SDL_RenderPresent(renderer);
     }
     
+    SDL_DestroyTexture(ball_texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
 
