@@ -49,6 +49,18 @@ void ball_step(Ball *ball, float dt)
             ball->vy = 0.0f;
         }
     }
+
+    if (ball->x < ball->radius)
+    {
+        ball->x = ball->radius;
+        ball->vx = -ball->vx * 0.9f;
+    }
+    
+    if (ball->x > WIDTH - ball->radius)
+    {
+        ball->x = WIDTH - ball->radius;
+        ball->vx = -ball->vx * 0.9f;
+    }
 }
 
 
@@ -117,7 +129,7 @@ int main(void)
 
     	balls[i].y = -rand() % 2000;
 
-    	balls[i].vx = 0.0f;
+    	balls[i].vx = (rand() % 200) - 100; //to make them move left right while falling 
     	balls[i].vy = 0.0f;
 
     	balls[i].radius = 8.0f;
